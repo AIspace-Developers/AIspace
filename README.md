@@ -8,3 +8,5 @@ We use the algorithm code from <a href="http://artint.info">"Artificial Intellig
 In order to run the project, you should download the code base from their website and then place the project files into that same directory. Any files with the same name should be overwritten. Note that this will make running the code base on its own no longer function in some cases.
 
 The project requires Jupyter Notebooks.
+
+[![Binder](http://mybinder.org/badge.svg)](http://mybinder.org:/repo/aispace-developers/aispace)
