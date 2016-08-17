@@ -8,7 +8,7 @@
 # Attribution-NonCommercial-ShareAlike 4.0 International License.
 # See: http://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 
-# This code is specialized to work in a Jupter Notebook environment
+# This code is specialized to work in a Jupter Notebook environment, but it should still work otherwise
 
 from utilities import Displayable
 
@@ -32,7 +32,9 @@ class Con_solver(Displayable):
                              for var in const.scope}
         else:
             to_do = to_do.copy()  # use a copy of to_do
+        self.display(4,"AC starting",self.domains)
         while to_do:
+            #Select arc, determine if it is consistent, prune, add arcs to to-do list, mark arc as consistent
             var,const = to_do.pop()
             self.display(3,"Processing arc (",var,",",const,")")
             other_vars = [ov for ov in const.scope if ov is not var]

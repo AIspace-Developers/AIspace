@@ -47,6 +47,9 @@ csp2 = CSP({'A':{1,2,3,4},'B':{1,2,3,4}, 'C':{1,2,3,4},
             Constraint(('D','E'),gt),
             Constraint(('B','D'),ne)])
             
+#In a notebook, the origin (0,0) is top-left
+#Variable coordinates are associated by name, but Constraints are by index
+#constraint[i] will have coordinates coords[i]
 cspCoords = CSP({'A':{1,2,3,4},'B':{1,2,3,4}, 'C':{1,2,3,4}, 
             'D':{1,2,3,4}, 'E':{1,2,3,4}},
            [ Constraint(('B',),ne_(3)),

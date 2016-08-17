@@ -9,8 +9,9 @@
 # See: http://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 
 # This code is specialized to work in a Jupyter Notebook environment
+# For CSP, notebookCSPSetup is required. For other algorithms, it should not affect execution
 
-from notebookCSPSetup import reduceDomain, highlightArc
+from notebookCSPSetup import reduceDomain, highlightArc, restoreDomains
 from time import sleep
 from threading import Thread
 import IPython.display as dsply
@@ -26,9 +27,8 @@ manualStepToggle = 0
 class Displayable(object):
     max_display_level = 1   # can be overridden in subclasses
     max_step_level = 1     # can be overridden in subclasses
-    # 0=turn off auto_step, 1=0.5s, 2=1.0s, 3=2.0s
     manual_step = False     # can be overridden in subclasses
-    # if manual_step == true, use different logic for executing
+    # if manual_step == true, require user input to complete execution
     auto_step_speed = 1     # can be overridden in subclasses
 
     def display(self,level,*args,**kwargs):
@@ -45,21 +45,19 @@ class Displayable(object):
         if level == -1:
             print("These are the args", *args)
             print("These are the **kwargs", kwargs)
-            #for i in range(len(args)):
-            #    print("The "+str(i)+"th arg: "+str(args[i]))
                 
         #For CSP domain pruning, args[2] = id of node, kwargs = elements to prune
+        #This code block will trigger the visualization to prune the domain of a variable
         if args[0] == 'Domain pruned':
             nodeName = args[2]
             consName = args[6]
             for key, value in kwargs.items():
                 elementValues = value
                 for elementValue in elementValues:
-                    #print("Reducing domain of", nodeName, "by removing ",elementValue)
                     reduceDomain(nodeName, elementValue)
             
-
         #For CSP arc highlighting, args[1] = id of Var, args[3] = Constraint
+        #This code block will trigger the visualization to highlight a specific arc
         #Blue: Needs to be considered
         #Green: Consistent
         #Red: Inconsistent
@@ -86,17 +84,15 @@ class Displayable(object):
             consName = args[3]
             highlightArc(varName, consName.__repr__(), "!bold","green")
             
-        #For adding an arc back to the to_do list
-        # adding {('B', A ne B), ('D', A eq D)} to to_do.
+        #For CSP arc consistency, args[1] = list of arcs to add
+        #This code clock will trigger the vizualization to add an arc back to the to_do list
+        #Added arcs will be blue
         if args[0] == "  adding":
             arcList = list(args[1])
             for i in range(len(arcList)):
-                #print(arcList[i])
-                #print(arcList[i][0], arcList[i][1].__repr__())
                 highlightArc(arcList[i][0], arcList[i][1].__repr__(), "!bold", "blue")
-                
 
-
+        #Control whether the algorithm proceeds on its own or requires user input
         global manualStepToggle
         if (manualStepToggle == 1):
             self.manual_step = False
@@ -110,17 +106,24 @@ class Displayable(object):
             if self.manual_step:
                 global blockAlg, newStepLvl
                 blockAlg = 1
-                spin() #spin and wait for stepButton press
+                spin() #spin and wait for a stepButton press
                 if (newStepLvl != 0):
                     self.max_step_level = newStepLvl
                     self.max_display_level = newStepLvl
                     newStepLvl = 0
                 print("current step_level:", self.max_step_level)
             else:
-                print("Automated pause level", level)
+                print("Automated pause level", self.max_step_level)
                 sleep(self.auto_step_speed)
                 
+        #if args[0] == "AC done. Reduced domains":
+        #    showResetButton()
         
+        #If AC starts, set all domains back to initial values and make all arcs blue
+        if args[0] == "AC starting":
+            restoreDomains()
+            highlightArc("all", "all", "!bold", "blue")
+
 import random
 
 def argmax(gen):
@@ -153,6 +156,10 @@ def dict_union(d1,d2):
     
 import json
 def cspToJson(cspObject):
+    """cspToJson takes a cspObject and creates a JSON representation.
+    This representation has the form:
+    {'nodes': [], 'constrains': [], 'coordinates: []}
+    """
     if cspObject.hasCoordinates():
         pythonRep = {'nodes': [],
                  'constraints': [],
@@ -174,6 +181,11 @@ def cspToJson(cspObject):
     return jsonRep
 
 class threadWR(Thread):
+    """threadWR is a thread extended to allow a return value.
+    To get the return value, use this thread as normal, but assign it to a variable on creation.
+    calling var.join() will return the return value.
+    the return value can also be gotten directly via ._return, but this is not safe.
+    """
     def __init__(self, *args, **kwargs):
         super(threadWR, self).__init__(*args, **kwargs)
         self._return = None
@@ -187,8 +199,9 @@ class threadWR(Thread):
         return self._return
         
 def setupGUI():
+    """setupGUI creates the GUI required to control the executing visualization"""
     def click_step1(b):
-        print("lvl1 Button clicked")
+        #print("lvl1 Button clicked")
         global newStepLvl
         newStepLvl = 1
         dsply.clear_output(wait=True)
@@ -196,7 +209,7 @@ def setupGUI():
         blockAlg = 0
 
     def click_step2(b):
-        print("lvl2 Button clicked")
+        #print("lvl2 Button clicked")
         global newStepLvl
         newStepLvl = 2
         dsply.clear_output(wait=True)
@@ -204,7 +217,7 @@ def setupGUI():
         blockAlg = 0
 
     def click_step3(b):
-        print("lvl3 Button clicked")
+        #print("lvl3 Button clicked")
         global newStepLvl
         newStepLvl = 3
         dsply.clear_output(wait=True)
@@ -212,47 +225,55 @@ def setupGUI():
         blockAlg = 0
         
     def click_step4(b):
-        print("lvl4 Button clicked")
+        #print("lvl4 Button clicked")
         global newStepLvl
         newStepLvl = 4
         dsply.clear_output(wait=True)
         global blockAlg
         blockAlg = 0
 
-    lvl1Button = widgets.Button(description="Step level 1")
-    lvl2Button = widgets.Button(description="Step level 2")
-    lvl3Button = widgets.Button(description="Step level 3")
-    lvl4Button = widgets.Button(description="Step level 4")
+    lvl1Button = widgets.Button(description="Step to end")
+    lvl2Button = widgets.Button(description="Step coarse")
+    lvl3Button = widgets.Button(description="Step fine")
+    lvl4Button = widgets.Button(description="Step finer")
     
     lvl1Button.on_click(click_step1)
-    lvl1Button.layout.width = '100px'
+    #lvl1Button.layout.width = '100px'
     lvl2Button.on_click(click_step2)
-    lvl2Button.layout.width = '100px'
+    #lvl2Button.layout.width = '100px'
     lvl3Button.on_click(click_step3)
-    lvl3Button.layout.width = '100px'
+    #lvl3Button.layout.width = '100px'
     lvl4Button.on_click(click_step4)
-    lvl4Button.layout.width = '100px'
+    #lvl4Button.layout.width = '100px'
     
     def click_play(b):
-        print("play button")
+        #print("play button")
         global manualStepToggle, blockAlg
         dsply.clear_output(wait=True)
         manualStepToggle = 1
         blockAlg = 0
         
     def click_pause(b):
-        print("pause button")
+        #print("pause button")
         global manualStepToggle
         manualStepToggle = 2
-        dsply.clear_output(wait=True)
+        #dsply.clear_output(wait=True)
     
-    autoButton = widgets.Button(description="Play")
+    autoButton = widgets.Button(description="Start auto-step")
     autoButton.on_click(click_play)
-    pauseButton = widgets.Button(description="Pause")
+    pauseButton = widgets.Button(description="Pause auto-step")
     pauseButton.on_click(click_pause)
     
-    autoButton.layout.width = '70px'
-    pauseButton.layout.width = '70px'
+    #autoButton.layout.width = '70px'
+    #pauseButton.layout.width = '70px'
+    
+    def click_restore(b):
+        restoreDomains()
+    
+    #global resetDomainB 
+    #TODO: get domain reset visibility working
+    #resetDomainB = widgets.Button(description="Reset Domains")
+    #resetDomainB.on_click(click_restore)
     
     runButtons = [autoButton, pauseButton]
     runContainer = widgets.HBox(children=runButtons)
@@ -262,6 +283,18 @@ def setupGUI():
     stepContainer = widgets.HBox(children=stepButtons)
     dsply.display(stepContainer)
     
+    #dsply.display(resetDomainB)
+    
+    
+#def showResetButton():
+ #   global resetDomainB
+  #  resetDomainB.visible = True
+    
+#def hideResetButton():
+  #  global resetDomainB
+   # resetDomainB.visible = False
+
+#spin blocks until blockAlg == 0. Functionally, this blocks until user supplies input
 def spin():
     while blockAlg == 1:
         #print("spinning")
@@ -273,14 +306,15 @@ def spin():
 #   of the call to a variable, and take ._return. _return is not thread safe
 def executeThread(func, *args, **kwargs):
     eThread = threadWR(target=func, args=args, kwargs=kwargs)
-    eThread.start()
     setupGUI()
+    eThread.start()
     return eThread
 
 # 2, callRecurse: For a chain of function calls, where each uses the output of
 #   the previous as input, use callRecurse(func1, func2, func3, ..., args). Note
 #   args will only be applied to the innermost function. Return is handled the
 #   same way as executeThread
+#   This is not the preferred method
 def callRecurse(func, *args):
     #print(args)
     #print(*args)
@@ -289,6 +323,7 @@ def callRecurse(func, *args):
     thrd.start()
     return thrd
     
+# recursiveThrd is used by callRecurse
 def recursiveThrd(func, *args):
     if callable(args[0]):
         listArgs = list(args)

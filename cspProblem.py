@@ -20,6 +20,10 @@ class Constraint(object):
         self.scope = scope
         self.condition = condition
 
+    # __repr__: if the scope contains 2 variables, return infix representation:
+    #   var1 constraint var2
+    #Otherwise return prefix representation:
+    #   Contraint var1 var2 var3 etc.
     def __repr__(self):
         if len(self.scope) == 2:
             return ""+str(self.scope[0]) +" "+self.condition.__name__+" "+str(self.scope[1])
@@ -70,10 +74,10 @@ class CSP(Displayable):
         return all(con.holds(assignment)
                     for con in self.constraints
                     if all(v in  assignment  for v in con.scope))
-                    
+
+    #If the CSP has a coordinate system attached, this will return True                
     def hasCoordinates(self):
         if self.coordinates is None:
             return False
         else:
             return True
-
