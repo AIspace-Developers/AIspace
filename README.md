@@ -4,7 +4,7 @@ These tools are for learning and exploring concepts in artificial intelligence. 
 This project is intended to be an expansion and companion to the existing [AIspace project](www.aispace.org).
 
 
-In order to run the project, you should download the code base from the [AIFCA website](http://artint.info/code/python/) and then place the project files into that same directory. Any files with the same name should be overwritten. Note that this will make running the code base on its own no longer function in some cases.
+In order to run the project you should download the code base from the [AIFCA website](http://artint.info/code/python/) and then place the project files into that same directory. Any files with the same name should be overwritten. Note that this will make running the code base on its own no longer function in some cases.
 
 The project also requires Jupyter Notebooks, and enabling ipywidgets.
 
