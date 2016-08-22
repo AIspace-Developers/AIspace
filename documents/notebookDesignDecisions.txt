@@ -1,0 +1,123 @@
+Design decisions for AIspace2 apps (notebookDesignDecisions.txt)
+August 19th, 2016
+Samuel Hutchinson (ultimax75@hotmail.com)
+
+This document will record various decisions made about the design of AIspace2
+
+Fine/Coarse stepping
+    How many buttons and what kinds of buttons should we use to control the execution of the algorithm?
+    These buttons will be implemented in Python.
+    
+    Decision: 'Fine Step' (level 4), 'Step' (level 2), 'AutoSolve' (manual_step = False), 
+    'Stop' (manual_step = True), 'AutoSolve Fast' (level 1), 'Reset' (reset graph and algorithm)
+    Each of the step buttons (Fine step, Step, AutoSolve Fast) skip the execution to the next display()
+    call of that level or lower
+    
+    Reason: The GUI should copy the existing AIspace1 applets as much as possible
+    
+    Alternatives
+    -One button for each display level. Algorithm skips to the next call of that level or lower
+    -Buttons to increase/decrease step level without stepping
+    -Button steps to the next higher/lower (+/-1 from current level) display call
+    
+Recenter graph after dragging a node
+    Should the graph shift after dragging a node to recentre and prevent nodes from overlapping or falling
+    off the edge of the window?
+
+    Decision: Allow a toggle for turning it on/off
+    
+    Reason: Depending on the use case, both could be useful.
+    
+    Alternatives
+    -After dragging and moving a node, the whole graph shifts to be in the centre of the page
+    -Graph doesn't shift
+
+Node widths
+    How wide should variable and constraint nodes be? Should they change during execution?
+    
+    Decision: 
+        Variables:  Node widths are based on the initial domain size of each node
+                    Widths scale dynamically as elements are eliminated from their domain
+                    
+        Constraints: Node widths are based on the length of the string of the label
+                    Widths do not change
+                    
+    Reason: Looks nicer
+    
+    Alternatives
+    -Variable node widths are static for the entirety of an execution
+    
+Constraint label formatting
+    How should the labels for constraints be formatted?
+    
+    Decision:
+        For 2 variable constraints: var1 cons var2
+        For 1 or 3+ constraints: cons var1 var2 ...
+    
+    Reason: infix formatting looks nicest, but has no meaning for # of constraints != 2. So use prefixes.
+    
+    Alternatives
+    -Simple pre-fix formatting (cons var1 var2 ...)
+    
+Arc colouring
+    How should the arcs be styled as the algorithm advances?
+    
+    Decision:
+        Blue: needs checking, Green: consistent, Red: inconsistent
+        Arc's are bold when selected for evaluation or hovered overlapping
+        
+    Reason: The GUI should copy the existing AIspace1 applets as much as possible
+    
+    Alternatives:
+    -No red colouring
+    -No bolding
+    -Any other colour scheme
+    
+Graph Menu bar
+    Should we have 2 menus, 1 for the graph, 1 for the control of the execution?
+    
+    Decision: Yes. Graph menu will be written in Javascript, part of the output of setup()
+    
+    Reason: There is clear contrast in style and location that indicates that the graph menu affects
+    the graph
+    
+    Alternatives
+    -One combined menu, written in Python
+    
+JavaScript insertion
+    How will the JavaScript code be combined with the Python code?
+    
+    Decision: Use (jinja2) templating to pass in arguments to JavaScript code, and kernel.execute() to
+    send code to Python.
+    
+    Reason: This is the only structure that actually fits all of our requirements for data passing
+    
+    Alternatives:
+    -IPython %%javascript magic
+    -display(JavaScript(_)) calls alone
+    
+Visualization tools
+    What tools will be used to render the visualizations?
+    
+    Decision: Use d3.js JavaScript library
+    
+    Reason: d3.js has the flexibility and power to do most of what we want. The few things it
+    can't do (such as automatic graph layouts that minimize edge crossings), no library can do.
+    
+    Alternatives:
+    -MPLD3: d3 version of matplotlib. Too restrictive for us.
+    -NetworkX: Good for directed graphs, but not arbitrary visualizations like we need.
+    -d3py: Outdated, not maintained
+    -vincent: outdated, not maintained
+    -bokeh: server-side computation, we want client side
+    -plotly: restrictive, and proprietary
+
+Base application
+    What platform should we use to develop the app itself?
+    
+    Decision: Jupyter Notebook
+    
+    Reason: Jupyter is a well developed platform that is user friendly and allows interactive development
+    
+    Alternatives
+    -Pure Javascript App

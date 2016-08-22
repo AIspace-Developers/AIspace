@@ -1,0 +1,99 @@
+Developing AIspace 2 apps (notebookDevelopmentGuide.txt)
+August 19th, 2016
+Samuel Hutchinson (ultimax75@hotmail.com)
+
+The overarching development strategy is to create an app that copies the functionality of the existing
+    AIspace applets and allows users to modify sections of the code, specifically the algorithms being used,
+    without having to go through the whole codebase itself.
+
+There are 4 components to an AIspace 2 app:
+    - The Notebook
+    - Python Algorithms (from aifca)
+    - JavaScript Setup
+    - Utilities
+
+The Notebook
+    A notebook is simply an interactive container for code. We use Jupyter Notebooks. You'll want to look up
+detailed information on them on your own, but a few simple facts will be presented here.
+
+    - A notebook consists of several cells which can be run independently and in arbitrary order
+    - The contents of a cell can be sent to a kernal for execution, or rendered as HTML
+    - Every cell operates in the same global namespace, and variables/functions declared in one can be accessed
+        from another
+    - The execution of a cell can be changed through use of various 'magics' such as %%javascript which will
+        send the contents of the cell to a javascript kernal
+        
+Python Algorithms
+    These are algorithms implemented in python that David Poole and Alan Mackworth have developed. They are
+available here(http://artint.info/code/python/). One of the design goals is to keep these algorithms as simple
+and as close to pseudocode as possible, so you probably won't be changing them very much.
+    One thing you may change about them is the display() statements, which don't affect the algorithm execution
+but rather display information to the user and other parts of the app. In particular, the utilities.py file
+relies on these display() calls to sync the visualizations with the algorithm execution.
+
+JavaScript Setup
+    This is a file or files that contains all the JavaScript code necessary to run the visualizations. These
+visualizations are run by d3.js, a very powerful visualization library. Generally, there will be a single
+function that handles setup, parsing of problem data, and graph creation, and several smaller functions that
+handle changing the visualization based on the progress of the algorithm. This is where a large portion of
+your development will happen.
+    Since JavaScript is a web language, it modifies the web page itself to create its visualizations. To that
+end, the first thing your Setup file should do is create or locate the correct web container to place all the
+elements you will need. After you create a div you can select it with d3.select() and populate it.
+    The largest issue with using d3.js in a notebook environment is data passing. Getting the JavaScript to pass
+data to Python and the Python to pass data to JavaScript is surprisingly difficult.
+    The current system gets around these 2 limitations by using a templating engine to pass parameters into
+JavaScript and kernal.execute to pass parameters into Python. The file itself is a Python file.
+
+    - Python to JavaScript: We use the Jinja2 Templating engine. Practically, wrap all your JavaScript code in 
+        a template, then make it a global variable. When you need to run the javascript code(and pass in 
+        arguments) implement and call a python function that calls: 
+        
+            display(Javascript(<nameOfTemplate>.render(<nameOfArg1>=[<arg1>],<nameOfArg2>=[<arg2>])))
+            
+        This will make arg1, arg2 available in the templated JavaScript code. You will need to unpack these
+        arguments. See the jinja2 documentation for details, and the existing apps for examples. Also note
+        that we use requireJS (a module included in the notebook) for including the d3.js library itself. You
+        will need to use it in any template that uses d3.js (which should be most if not all of them).
+        
+    - JavaScript to Python: The IPython engine that the notebook uses has a built in module for executing
+        code in the Python kernal from JavaScript. Create a kernal variable with:
+        
+            var kernel = IPython.notebook.kernel;
+            
+        Then call:
+        
+            kernal.execute("<pythonCodeAsAString>")
+            
+        This will execute the argument string as Python code, as if it were run in a notebook cell. You can
+        also do complicated code such as:
+            
+            kernel.execute("sampleFunc("+aVar+","+bVar+")")
+            
+        Where sampleFunc is a Python function, and aVar and bVar are JavaScript variables. This will let you
+        pass anything you need back into Python through clever use of functions.
+        
+Utilities
+    utilities.py is a Python file that serves to connect the rest of the app. In addition to containing many
+useful functions, it processes the display() calls from the Python algorithms, calls the functions that serve
+as hooks for the JavaScript code, and displays and handles the Python portion of the GUI. Along with the
+JavaScript Setup file, this is where most of your development will happen.
+    You will need to modify this file to support whatever new app you are developing. The most common addition
+is new logic for the display() function. By testing the strings passed into this function by the Python 
+algorithms it can know what behaviour the visualization should take and can call the required functions. Any
+new GUI elements (or an entirely separate GUI for the new app) will also be implemented here.
+
+Additional Resources
+    You should read through the user guide (notebookUserGuide.txt) to get a better understanding of how the
+various pieces work together in the notebook itself. You should also read the design decision guide 
+(notebookDesignDecisions.txt) to read about why we do things certain ways.
+
+A note on threading
+    We would like to present as simple an interface as possible so that users are not overwhelmed nor do they
+break something. To that effect, many technical details are hidden by wrapping them in functions. One of those
+details is that the app uses threads. In order to run both the GUI and the actual algorithm, the algorithm
+(including all the display() calls that drive the visualization) is run in a thread. How this is done is: put
+all the executing code in a function, and pass that function to utilities.startAlgorithm(). This takes care of
+generating the GUI and spawning the thread to run the execution. You shouldn't need to worry too much about
+asynchrony (since the thread and the main process act on different elements), but you should be aware of it.
+

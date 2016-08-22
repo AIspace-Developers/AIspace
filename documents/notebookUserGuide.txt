@@ -1,0 +1,89 @@
+How to use the prototype CSP app (notebookUserGuide.txt)
+August 18th, 2016
+Samuel Hutchinson (ultimax75@hotmail.com)
+
+This "app" isn't really an app. It is a collection of files that feed into a Jupyter Notebook
+and, collectively, display the visualization of the constraint satisfaction problem. There are
+several consequences due to the open nature of notebooks. The first is that it is highly flexible,
+a user can easily change the data and even the algorithms being performed. Another is lack of
+security and structure, in that a user has very few restrictions about what they can do with the
+notebook. Furthermore, there is very little guiding the user to use the tools correctly beyond
+the initial settings of the notebook.
+
+This document will hopefully aid in understanding of the system and help new users become familiar
+with it.
+
+--- Setup ---
+There are 2 ways to use the notebook: hosting it locally or accessing it remotely.
+
+If you are using a remote system like Jupyter Hub or MyBinder you can just go to the appropriate
+URL and start using it.
+
+If you are going to host it locally, there is additional setup required.
+
+1. Install Jupyter Notebooks. You can follow these instructions (http://jupyter.readthedocs.io/en/latest/install.html)
+    which also guide you through installing Python3 (also a requirement). I recommend using pip.
+2. Install ipywidgets. If using pip type "pip install ipywidgets" in a terminal. 
+    Enable widgets in jupyter with "jupyter nbextension enable --py widgetsnbextension"
+3. Download the required files. The files are on GitHub(https://github.com/AIspace-Developers/AIspace)
+    and on this website(http://www.cs.ubc.ca/~sumv2010/).
+4. (optional) Download the whole codebase from (http://artint.info/code/python/). Place this in a new
+    directory, then move the files downloaded from GitHub into that directory, replacing anything with
+    the same name. This will let you customize the app and run more algorithms.
+5. Start a Jupyter kernal in the same directory you stored the files in by opening a command terminal, 
+    navagating to the directory, and calling "jupyter notebook".
+6. Open CSPdisplay.ipynb
+
+--- Running the app ---
+If left the way it is, running all the cells of the notebook(shift+enter or 'run cell' button) in order
+will show the visualization, start and display arc consistency, and perform depthfirst search.
+
+Note that cells can be run in arbitrary order (or not at all) and every cell affects the global namespace, 
+so declaring a variable in 1 cell will make it available in another, as will importing packages and libraries.
+If the cells are run out of order with respect to their dependencies (1 before 2 and 3, 3 before 4), you
+will get errors.
+
+Cell 1: 
+This mostly contains import statements for required modules. It also defines searchThreadFunction(),
+which should contain most of the customization you will use. Put all your algorithms and other code here. 
+This function will be passed to a thread and executed. A couple things to look out for: if you need a return 
+value, make sure the function returns it. The CSP you place in here to run on needs to be the same one you 
+pass to cell 3. You need to pass this function to cell 4.
+
+Cell 2: 
+These statements affect the running of the algorithm and how much information is displayed to the user.
+These are not stricly necessary as there are defaults for all these values, but adjusting them can create a
+much more useful execution. 
+manual_step: determines whether the execution advances in manual step mode (waits for the user) or  auto step
+    mode (proceeds automatically). True means it will be in manual step mode, False means auto step mode. 
+    Defaults to False.
+max_display_level: The initial amount of information to show. 1 is the least (showing almost nothing except 
+    start and end), while 4 is the highest (showing everything). Defaults to 1.
+max_step_level: The initial size of steps to use for both manual and auto stepping. This matches 
+    max_display_level, in that 1 will skip to the end, while 4 will step through every detail. Defaults to 1.
+auto_step_speed: The time (in seconds) that the auto stepping feature will pause on each step. Defaults to 1.
+
+Cell 3: 
+This is the call that creates the actual visualization and a GUI for it. setup() takes a JSON format 
+CSP problem, which cspToJson produces given a python format CSP. In order to work properly, the CSP in this 
+cell MUST be the same CSP in searchThreadFunction() in cell 1. Otherwise the visualization will be gibberish.
+GUI:
+    Toggle Button: Graph Recentreing: When enabled, the graph will automatically recentre so no nodes are
+        outside the boundaries of the graph or overlapping. If disabled, no changes will be made.
+
+Cell 4: 
+This is the call the starts the execution of the code in searchThreadFunction. startAlgorithm() takes
+the function defined in cell 1, starts a thread for it, and creates the GUI used to control it. If your
+defined searchThreadFunction has a return value, assign the return of searchThreadFunction to result and 
+(after the thread has terminated) access it with result._return.
+GUI:
+    Buttons: Fine Step: In manual step mode, advance the algorithm by stepping through all details.
+            Step: In manual step mode, advance the algorthm by skipping over some details.
+            AutoSolve: Turn on auto step mode, automatically advancing through the algorithm.
+            Stop: Stop auto step mode, effectively turning on manual step mode.
+            AutoSolve Fast: Advance the algorithm as fast as possible until termination.
+            Reset: Reset the graph to it's initial state and restart the algorithm specified in 
+                searchThreadFunction. Will cause issues if clicked while an execution is still in progress.
+    Console: Printed details of the steps the algorithm advances through. A higher max_display_level or
+        Finer stepping will produce more details.
+
