@@ -36,14 +36,14 @@ class Con_solver(Displayable):
         while to_do:
             #Select arc, determine if it is consistent, prune, add arcs to to-do list, mark arc as consistent
             var,const = to_do.pop()
-            self.display(3,"Processing arc (",var,",",const,")")
+            self.display(2,"Processing arc (",var,",",const,")")
             other_vars = [ov for ov in const.scope if ov is not var]
             new_domain = {val for val in self.domains[var]
                           if self.any_holds(const,{var:val},other_vars,0)}
             removed_vars = self.domains[var] - new_domain
             if new_domain != self.domains[var]:
                 self.display(4,"Arc: (",var,",",const,") is inconsistent")
-                self.display(2,"Domain pruned","dom(",var,") =",new_domain," due to ",const, varName=removed_vars)
+                self.display(3,"Domain pruned","dom(",var,") =",new_domain," due to ",const, varName=removed_vars)
                 self.domains[var] = new_domain
                 add_to_do = self.new_to_do(var,const)
                 to_do |= add_to_do      # set union
