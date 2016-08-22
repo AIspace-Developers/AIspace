@@ -1,6 +1,6 @@
 Design decisions for AIspace2 apps (notebookDesignDecisions.txt)
 August 19th, 2016
-Samuel Hutchinson (ultimax75@hotmail.com)
+Samuel Hutchinson
 
 This document will record various decisions made about the design of AIspace2
 
