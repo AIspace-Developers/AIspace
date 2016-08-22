@@ -8,6 +8,6 @@ In order to run the project you should download the code base from the [AIFCA we
 
 The project also requires Jupyter Notebooks, and enabling ipywidgets.
 
-You may click on the badge to launch the project in a Binder [![Binder](http://mybinder.org/badge.svg)](http://mybinder.org:/repo/aispace-developers/aispace)
+You may click on the badge to launch the project in a [Binder](http://mybinder.org) [![Binder](http://mybinder.org/badge.svg)](http://mybinder.org:/repo/aispace-developers/aispace)
 
 For more step-by-step instructions, see [this website](http://www.cs.ubc.ca/~sumv2010/)
