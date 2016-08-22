@@ -1,6 +1,6 @@
 Developing AIspace 2 apps (notebookDevelopmentGuide.txt)
 August 19th, 2016
-Samuel Hutchinson (ultimax75@hotmail.com)
+Samuel Hutchinson
 
 The overarching development strategy is to create an app that copies the functionality of the existing
     AIspace applets and allows users to modify sections of the code, specifically the algorithms being used,
