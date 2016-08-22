@@ -87,10 +87,11 @@ class Displayable(object):
         #For CSP arc consistency, args[1] = list of arcs to add
         #This code clock will trigger the vizualization to add an arc back to the to_do list
         #Added arcs will be blue
-        if args[0] == "  adding":
-            arcList = list(args[1])
-            for i in range(len(arcList)):
-                highlightArc(arcList[i][0], arcList[i][1].__repr__(), "!bold", "blue")
+        if args[0] == "  adding" and args[2] == "to to_do.":
+            if args[1] != "nothing":
+                arcList = list(args[1])
+                for i in range(len(arcList)):
+                    highlightArc(arcList[i][0], arcList[i][1].__repr__(), "!bold", "blue")
 
         #Control whether the algorithm proceeds on its own or requires user input
         global manualStepToggle
@@ -113,7 +114,7 @@ class Displayable(object):
                     newStepLvl = 0
                 print("current step_level:", self.max_step_level)
             else:
-                print("Automated pause level", self.max_step_level)
+                #print("Automated pause level", self.max_step_level)
                 sleep(self.auto_step_speed)
                 
         #if args[0] == "AC done. Reduced domains":
@@ -198,7 +199,7 @@ class threadWR(Thread):
         super(threadWR, self).join(*args, **kwargs)
         return self._return
         
-def setupGUI():
+def setupGUI(func=None,*args,**kwargs):
     """setupGUI creates the GUI required to control the executing visualization"""
     def click_step1(b):
         #print("lvl1 Button clicked")
@@ -232,10 +233,10 @@ def setupGUI():
         global blockAlg
         blockAlg = 0
 
-    lvl1Button = widgets.Button(description="Step to end")
-    lvl2Button = widgets.Button(description="Step coarse")
+    lvl1Button = widgets.Button(description="AutoSolve Fast")
+    lvl2Button = widgets.Button(description="Step")
     lvl3Button = widgets.Button(description="Step fine")
-    lvl4Button = widgets.Button(description="Step finer")
+    lvl4Button = widgets.Button(description="Fine Step")
     
     lvl1Button.on_click(click_step1)
     #lvl1Button.layout.width = '100px'
@@ -259,40 +260,26 @@ def setupGUI():
         manualStepToggle = 2
         #dsply.clear_output(wait=True)
     
-    autoButton = widgets.Button(description="Start auto-step")
+    autoButton = widgets.Button(description="AutoSolve")
     autoButton.on_click(click_play)
-    pauseButton = widgets.Button(description="Pause auto-step")
+    pauseButton = widgets.Button(description="Stop")
     pauseButton.on_click(click_pause)
     
     #autoButton.layout.width = '70px'
     #pauseButton.layout.width = '70px'
     
-    def click_restore(b):
+    def click_reset(b):
         restoreDomains()
+        highlightArc("all", "all", "!bold", "blue")
+        executeThread(func, args, kwargs)
+        dsply.clear_output(wait=True)
     
-    #global resetDomainB 
-    #TODO: get domain reset visibility working
-    #resetDomainB = widgets.Button(description="Reset Domains")
-    #resetDomainB.on_click(click_restore)
+    resetButton = widgets.Button(description="Reset")
+    resetButton.on_click(click_reset)
     
-    runButtons = [autoButton, pauseButton]
-    runContainer = widgets.HBox(children=runButtons)
-    dsply.display(runContainer)
-    
-    stepButtons = [lvl1Button, lvl2Button, lvl3Button, lvl4Button]
-    stepContainer = widgets.HBox(children=stepButtons)
-    dsply.display(stepContainer)
-    
-    #dsply.display(resetDomainB)
-    
-    
-#def showResetButton():
- #   global resetDomainB
-  #  resetDomainB.visible = True
-    
-#def hideResetButton():
-  #  global resetDomainB
-   # resetDomainB.visible = False
+    buttonGroup = [lvl4Button, lvl2Button, autoButton, pauseButton, lvl1Button, resetButton]
+    buttonContainer = widgets.HBox(children=buttonGroup)
+    dsply.display(buttonContainer)
 
 #spin blocks until blockAlg == 0. Functionally, this blocks until user supplies input
 def spin():
@@ -300,13 +287,19 @@ def spin():
         #print("spinning")
         sleep(0.1)
         
+# startAlgorithm uses the 1st method of creating a thread (documented below) and also
+# creates the GUI for controlling the execution of the thread.        
+def startAlgorithm(func, *args, **kwargs):
+    setupGUI(func, args, kwargs)
+    return executeThread(func, args, kwargs)
+    
 # 2 ways of creating threads for computations: executeThrd and callRecurse
 # 1, executeThrd: Wrap your work in a function, including a return value if any
 #   call executeThrd(function). If a return value is needed, assign the return
 #   of the call to a variable, and take ._return. _return is not thread safe
+    
 def executeThread(func, *args, **kwargs):
     eThread = threadWR(target=func, args=args, kwargs=kwargs)
-    setupGUI()
     eThread.start()
     return eThread
 
