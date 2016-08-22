@@ -1,6 +1,6 @@
 How to use the prototype CSP app (notebookUserGuide.txt)
 August 18th, 2016
-Samuel Hutchinson (ultimax75@hotmail.com)
+Samuel Hutchinson
 
 This "app" isn't really an app. It is a collection of files that feed into a Jupyter Notebook
 and, collectively, display the visualization of the constraint satisfaction problem. There are
